@@ -9,13 +9,13 @@ namespace CSProjectAnalyser
 {
     internal class AnalysisController
     {
-        private StringBuilder _sb = new StringBuilder();
+        private StreamWriter _sw;
         private Dictionary<string, ProjectReferenceMap> _dictCsProjFiles;
         private List<string> _recursedAssemblies = new List<string>();
 
-        internal string Process(AnalyserParams analyserParams)
+        internal void Process(AnalyserParams analyserParams, StreamWriter streamWriter)
         {
-            _sb.Clear();
+            _sw = streamWriter;
 
             var filePaths = Enumerable.ToList<string>(FindFilesByExtension(analyserParams.Path)); // grab all csproj files
             _dictCsProjFiles = InitCSProjDictionary(filePaths);
@@ -54,9 +54,11 @@ namespace CSProjectAnalyser
             if (analyserParams.AssemblyToAnalyse.Length > 1)
             {
                 if (_dictCsProjFiles.ContainsKey(analyserParams.AssemblyToAnalyse) == false)
-                    return
-                        string.Format(
-                            "The provided assembly value {0} was not found during scan, please check the assembly name is correct.");
+                {
+                    _sw.WriteLine(
+                        $"The provided assembly value {analyserParams.AssemblyToAnalyse} was not found during scan, please check the assembly name is correct.");
+                    return;
+                }
 
                 items = new Dictionary<string, ProjectReferenceMap>();
                 items.Add(analyserParams.AssemblyToAnalyse, _dictCsProjFiles[analyserParams.AssemblyToAnalyse]);
@@ -69,51 +71,55 @@ namespace CSProjectAnalyser
 
             if (analyserParams.Summary)
             {
-                _sb.AppendLine("\n\n--------------------SUMMARY----------------------");
-
-                _sb.AppendLine("Distinct assemblies found:"+_dictCsProjFiles.Keys.Count);
-
-                _sb.AppendLine("Not referenced (Top level?)\n");
-                var topLevel = from project in _dictCsProjFiles.Values
-                    where project.UsedBy.Count == 0
-                    orderby project.Name
-                    select project;
-
-                foreach (var project in topLevel)
-                {
-                    _sb.AppendLine(string.Format("    {0} - {1}", project.Name, project.File.Replace(analyserParams.Path, "")));
-                }
-
-
-                _sb.AppendLine("---------------------------\r\n\r\nTop 20 most referenced ()");
-                var most = from project in _dictCsProjFiles.Values
-                    where project.UsedBy.Count > 0
-                    orderby project.UsedBy.Count descending
-                    select project;
-
-                foreach (var project in most.Take(20))
-                {
-                    _sb.AppendLine(string.Format("    {0} - {1}", project.Name, project.UsedBy.Count));
-                }
+                PrintSummary(analyserParams);
             }
-            return _sb.ToString();
+        }
+
+        private void PrintSummary(AnalyserParams analyserParams)
+        {
+            _sw.WriteLine("\n\n--------------------SUMMARY----------------------");
+
+            _sw.WriteLine("Distinct assemblies found:" + _dictCsProjFiles.Keys.Count);
+
+            _sw.WriteLine("Not referenced (Top level?)\n");
+            var topLevel = from project in _dictCsProjFiles.Values
+                where project.UsedBy.Count == 0
+                orderby project.Name
+                select project;
+
+            foreach (var project in topLevel)
+            {
+                _sw.WriteLine($"    {project.Name} - {project.File.Replace(analyserParams.Path, "")}");
+            }
+
+
+            _sw.WriteLine("---------------------------\r\n\r\nTop 20 most referenced ()");
+            var most = from project in _dictCsProjFiles.Values
+                where project.UsedBy.Count > 0
+                orderby project.UsedBy.Count descending
+                select project;
+
+            foreach (var project in most.Take(20))
+            {
+                _sw.WriteLine($"    {project.Name} - {project.UsedBy.Count}");
+            }
         }
 
         private void PrintReferenceMap(ProjectReferenceMap projectReferenceMap, AnalyserParams analyserParams)
         {
-            _sb.AppendLine(string.Format("-------------------{0}--------------", projectReferenceMap.Name));
-            _sb.AppendLine("References (" + projectReferenceMap.Uses.Count + "):");
+            _sw.WriteLine($"-------------------{projectReferenceMap.Name}--------------");
+            _sw.WriteLine("References (" + projectReferenceMap.Uses.Count + "):");
             foreach (var usage in projectReferenceMap.Uses.OrderBy(t => t.Name))
             {
                 PrintReferenceEntry(usage, analyserParams, "-->", 0);
             }
 
-            _sb.AppendLine("Referenced by (" + projectReferenceMap.UsedBy.Count + "):");
+            _sw.WriteLine("Referenced by (" + projectReferenceMap.UsedBy.Count + "):");
             foreach (var usage in projectReferenceMap.UsedBy.OrderBy(t => t.Name))
             {
-                _sb.AppendLine("  " + usage.Name);
+                _sw.WriteLine("  " + usage.Name);
             }
-            _sb.AppendLine();
+            _sw.WriteLine();
         }
 
         private void PrintReferenceEntry(ReferenceEntry usage, AnalyserParams analyserParams, string indent, int currentDepth)
@@ -127,18 +133,18 @@ namespace CSProjectAnalyser
                 if(analyserParams.Verbosity == Verbosity.High)
                     if (usage.HintPath.Length > 0) s += "\n    " + "    HintPath:" + usage.HintPath;
             }
-            _sb.AppendLine(string.Format("{0} {1}",indent, s));
+            _sw.WriteLine($"{indent} {s}");
 
             //recurse through entries
             if (analyserParams.RecurseDependencies && analyserParams.AssemblyToAnalyse.Length > 0 && _dictCsProjFiles.ContainsKey(usage.Name))
             {
                 if (currentDepth > analyserParams.RecurseDependenciesMaxDepth)
                 {
-                    _sb.AppendLine(indent + "RECURSTION DEPTH EXCEEDED - potential circular references");
+                    _sw.WriteLine(indent + "RECURSTION DEPTH EXCEEDED - potential circular references");
                     return;
                 }
 
-                //_sb.AppendLine(indent + "which references:");
+                //_sw.AppendLine(indent + "which references:");
                 var project = _dictCsProjFiles[usage.Name];
                 foreach (var dependency in project.Uses.OrderBy(t => t.Name))
                 {
@@ -214,7 +220,7 @@ namespace CSProjectAnalyser
             }
             catch (Exception e)
             {
-                _sb.AppendLine(file + " caused error " + e.ToString());
+                _sw.WriteLine(file + " caused error " + e.ToString());
                 return string.Empty;
             }
         }

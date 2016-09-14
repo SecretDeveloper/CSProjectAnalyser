@@ -10,6 +10,10 @@ namespace CSProjectAnalyser
         {
             try
             {
+#if DEBUG
+                args = "C:\\Projects\\EN\\PlaneBiz\\Development\\Release16Sep BaseEnrollment -s".Split(' ');
+#endif
+
                 var analyserParams = new AnalyserParams();
                 var result = Parser.Parse(analyserParams, args);
                 if (!result.Successful || result.ShowHelp)
@@ -20,16 +24,24 @@ namespace CSProjectAnalyser
                 
                 if (Directory.Exists(analyserParams.Path) == false)
                 {
-                    Console.WriteLine("Invalid directory {0}", analyserParams.Path);
+                    Console.WriteLine($"Invalid directory {analyserParams.Path}");
                     return;
                 }
 
-                var output = (new AnalysisController()).Process(analyserParams);
-                Console.WriteLine(output);
+                using (var sw = new StreamWriter(Console.OpenStandardOutput()))
+                {
+                    sw.AutoFlush = true;
+                    var outt = Console.Out;
+                    Console.SetOut(sw);
+                    (new AnalysisController()).Process(analyserParams, sw);
+                    Console.SetOut(outt);
+                    
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
     }
