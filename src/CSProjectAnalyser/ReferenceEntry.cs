@@ -1,6 +1,6 @@
 ﻿namespace CSProjectAnalyser
 {
-    internal class ReferenceEntry
+    public class ReferenceEntry
     {
         public string Include { get; set; }
         public string Name { get; set; }

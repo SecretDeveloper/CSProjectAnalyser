@@ -24,7 +24,7 @@ namespace CSProjectAnalyser
                 
                 if (Directory.Exists(analyserParams.Path) == false)
                 {
-                    Console.WriteLine($"Invalid directory {analyserParams.Path}");
+                    Console.WriteLine("Invalid directory {0}", analyserParams.Path);
                     return;
                 }
 

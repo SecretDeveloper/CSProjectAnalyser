@@ -7,13 +7,12 @@ using System.Xml.Linq;
 
 namespace CSProjectAnalyser
 {
-    internal class AnalysisController
+    public class AnalysisController
     {
         private StreamWriter _sw;
         private Dictionary<string, ProjectReferenceMap> _dictCsProjFiles;
-        private List<string> _recursedAssemblies = new List<string>();
 
-        internal void Process(AnalyserParams analyserParams, StreamWriter streamWriter)
+        public void Process(AnalyserParams analyserParams, StreamWriter streamWriter)
         {
             _sw = streamWriter;
 
@@ -22,17 +21,12 @@ namespace CSProjectAnalyser
 
 
             // Gather all referenced items from all cs project files
-            Dictionary<string, ReferenceEntry> allReferenceEntries = new Dictionary<string, ReferenceEntry>();
             foreach (var project in _dictCsProjFiles.Values)
             {
                 foreach (var referenceEntry in GetReferencesEntriesFromCSProj(project.File))
                 {
                     if (!analyserParams.ShouldIncludeReference(referenceEntry.Name)) continue;  // skip items we want to ignore.
 
-                    if (!allReferenceEntries.ContainsKey(referenceEntry.Name))
-                    {
-                        allReferenceEntries.Add(referenceEntry.Name, referenceEntry);
-                    }
                     project.Uses.Add(referenceEntry);
                 }
             }
@@ -55,8 +49,7 @@ namespace CSProjectAnalyser
             {
                 if (_dictCsProjFiles.ContainsKey(analyserParams.AssemblyToAnalyse) == false)
                 {
-                    _sw.WriteLine(
-                        $"The provided assembly value {analyserParams.AssemblyToAnalyse} was not found during scan, please check the assembly name is correct.");
+                    _sw.WriteLine("The provided assembly value {0} was not found during scan, please check the assembly name is correct.", analyserParams.AssemblyToAnalyse);
                     return;
                 }
 
@@ -89,7 +82,7 @@ namespace CSProjectAnalyser
 
             foreach (var project in topLevel)
             {
-                _sw.WriteLine($"    {project.Name} - {project.File.Replace(analyserParams.Path, "")}");
+                _sw.WriteLine("    {0} - {1}", project.Name, project.File.Replace(analyserParams.Path, ""));
             }
 
 
@@ -101,13 +94,13 @@ namespace CSProjectAnalyser
 
             foreach (var project in most.Take(20))
             {
-                _sw.WriteLine($"    {project.Name} - {project.UsedBy.Count}");
+                _sw.WriteLine("    {0} - {1}",project.Name,project.UsedBy.Count);
             }
         }
 
         private void PrintReferenceMap(ProjectReferenceMap projectReferenceMap, AnalyserParams analyserParams)
         {
-            _sw.WriteLine($"-------------------{projectReferenceMap.Name}--------------");
+            _sw.WriteLine("-------------------{0}--------------",projectReferenceMap.Name);
             _sw.WriteLine("References (" + projectReferenceMap.Uses.Count + "):");
             foreach (var usage in projectReferenceMap.Uses.OrderBy(t => t.Name))
             {
@@ -133,7 +126,7 @@ namespace CSProjectAnalyser
                 if(analyserParams.Verbosity == Verbosity.High)
                     if (usage.HintPath.Length > 0) s += "\n    " + "    HintPath:" + usage.HintPath;
             }
-            _sw.WriteLine($"{indent} {s}");
+            _sw.WriteLine("{0} {1}", indent,s);
 
             //recurse through entries
             if (analyserParams.RecurseDependencies && analyserParams.AssemblyToAnalyse.Length > 0 && _dictCsProjFiles.ContainsKey(usage.Name))
@@ -225,15 +218,20 @@ namespace CSProjectAnalyser
             }
         }
 
-        private List<ReferenceEntry> GetReferencesEntriesFromCSProj(string file)
+        private IEnumerable<ReferenceEntry> GetReferencesEntriesFromCSProj(string file)
         {
+//            XNamespace msbuild = "http://schemas.microsoft.com/developer/msbuild/2003";
+//            XDocument projDefinition = XDocument.Load(file);
+//            List<ReferenceEntry> references = projDefinition
+//                .Element(msbuild + "Project")
+//                .Elements(msbuild + "ItemGroup")
+//                .Elements(msbuild + "Reference")
+//                //.Elements(msbuild + "HintPath")
+//                .Select<XElement, ReferenceEntry>(ParseReferenceEntry).ToList();
+
             XNamespace msbuild = "http://schemas.microsoft.com/developer/msbuild/2003";
             XDocument projDefinition = XDocument.Load(file);
-            List<ReferenceEntry> references = projDefinition
-                .Element(msbuild + "Project")
-                .Elements(msbuild + "ItemGroup")
-                .Elements(msbuild + "Reference")
-                //.Elements(msbuild + "HintPath")
+            List<ReferenceEntry> references = projDefinition.Descendants(XName.Get("Reference", "http://schemas.microsoft.com/developer/msbuild/2003"))
                 .Select<XElement, ReferenceEntry>(ParseReferenceEntry).ToList();
             
             return references;

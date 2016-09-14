@@ -6,7 +6,7 @@
     }
 
     [CliParse.ParsableClass("AnalyserParams")]
-    class AnalyserParams : CliParse.Parsable
+    public class AnalyserParams : CliParse.Parsable
     {
         [CliParse.ParsableArgument("Path", ShortName = 'p', DefaultValue = "", Description = "The path to scan", ImpliedPosition = 1, Required = false)]
         public string Path { get; set; }

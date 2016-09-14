@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSProjectAnalyser", "CSProjectAnalyser.csproj", "{56048D61-E19E-4FA0-9372-904F6276C26A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSProjectAnalyserTest", "..\CSProjectAnalyserTest\CSProjectAnalyserTest.csproj", "{67A2D5EF-E6D0-4FFD-8C05-7BFF2F2FE7D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{56048D61-E19E-4FA0-9372-904F6276C26A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56048D61-E19E-4FA0-9372-904F6276C26A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56048D61-E19E-4FA0-9372-904F6276C26A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67A2D5EF-E6D0-4FFD-8C05-7BFF2F2FE7D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67A2D5EF-E6D0-4FFD-8C05-7BFF2F2FE7D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67A2D5EF-E6D0-4FFD-8C05-7BFF2F2FE7D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67A2D5EF-E6D0-4FFD-8C05-7BFF2F2FE7D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
