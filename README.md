@@ -1,7 +1,7 @@
 # CSProjectAnalyser
 
 Description:
-Analyses csproj files to determine dependencies.  
+Command line application which analyses csproj files to determine dependencies.  
 
 ```
 Syntax:
