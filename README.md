@@ -3,6 +3,7 @@
 Description:
 Analyses csproj files to determine dependencies.  
 
+```
 Syntax:
 The following argument prefix characters can be used: '-','/'
     --Path, -p
@@ -41,3 +42,4 @@ The following argument prefix characters can be used: '-','/'
     --IncludeSystemDependencies, -s
         Include System.* dependencies
         [Optional], Default:'False'
+```
